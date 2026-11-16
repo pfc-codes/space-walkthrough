@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#0c0e0f" />
+  <meta name="description" content="Explore a three-dimensional scan in an interactive browser walkthrough." />
+  <title>Space — Interactive 3D Walkthrough</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <main id="app">
+    <canvas id="viewport" aria-label="Interactive three-dimensional scan"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="identity" aria-label="Interactive space scan">
+        <span class="identity-symbol" aria-hidden="true">◫</span>
+        <div><div class="identity-name">SPACE<span class="identity-stop">.</span></div>
+          <div class="identity-sub">INTERACTIVE SCAN <span class="middot">/</span> 001</div></div>
+      </div>
+      <div class="top-actions">
+        <span id="scanState" class="scan-state"><span class="state-dot"></span> LOADING</span>
+        <button class="square-button" id="shareBtn" title="Copy page link" aria-label="Copy page link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M9 12h6M15.5 8.5H17a4 4 0 0 1 0 8h-2M8.5 8.5H7a4 4 0 0 0 0 8h2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div id="intro" class="intro-block">
+      <div class="eyebrow"><span class="rule"></span> DIGITAL WALKTHROUGH</div>
+      <h1>Explore the<br /><em>space.</em></h1>
+      <p>A captured environment, ready to discover from every angle.</p>
+    </div>
+
+    <div id="walkReticle" class="reticle" aria-hidden="true" hidden><span></span></div>
+    <div id="lookTip" class="look-tip" hidden>CLICK TO LOOK AROUND <span>·</span> ESC TO RELEASE</div>
+
+    <div id="mobilePad" class="mobile-pad" hidden>
+      <div id="joystick" class="joystick" aria-label="Walk movement control"><div id="stick" class="stick"></div></div>
+      <div class="pad-label">MOVE</div>
+    </div>
+    <div id="mobileLookLabel" class="mobile-look-label" hidden>DRAG TO LOOK</div>
+
+    <footer class="bottom-bar">
+      <div class="info-caption">
+        <div class="caption-index">01 <span>/</span> 01</div>
+        <div id="modeHint" class="caption-detail">DRAG TO ROTATE <span>·</span> SCROLL TO ZOOM</div>
+      </div>
+      <nav class="mode-switch" aria-label="Navigation mode">
+        <button id="overviewBtn" class="mode-btn active" aria-pressed="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4a13 13 0 0 0 0 16M12 4a13 13 0 0 1 0 16"/></svg>
+          OVERVIEW
+        </button>
+        <button id="walkBtn" class="mode-btn" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="5" r="2"/><path d="m9 21 2-6 2 2 2 4M10.5 9l2.5 3 4 1M7 14l3.5-5 4 1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          WALK
+        </button>
+      </nav>
+      <div class="footer-actions">
+        <button class="text-button" id="resetBtn" title="Reset view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 11a8 8 0 1 1 1.7 5M4 5v6h6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>RESET</span></button>
+        <button class="text-button" id="helpBtn" title="Controls and information"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11.5V16.5M12 8h.01" stroke-linecap="round"/></svg><span>HELP</span></button>
+      </div>
+    </footer>
+
+    <section id="helpDialog" class="dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
+      <div class="dialog-panel">
+        <div class="dialog-heading"><div class="eyebrow"><span class="rule"></span> GUIDE</div><button id="closeHelp" class="close-button" aria-label="Close help">×</button></div>
+        <h2 id="helpTitle">Navigate the scan.</h2>
+        <div class="guide-section"><h3>OVERVIEW</h3><p><strong>Drag</strong> to rotate around the model. <strong>Scroll / pinch</strong> to zoom. <strong>Right drag</strong> to pan. On desktop, <strong>double-click a floor</strong> to enter the walkthrough there.</p></div>
+        <div class="guide-section"><h3>WALK MODE</h3><p><strong>W A S D / arrow keys</strong> to move. <strong>Mouse</strong> to look after clicking the scene; <strong>Esc</strong> releases the pointer. <strong>Shift</strong> to move faster. <strong>Q / E</strong> to move down / up. On a phone, use the left joystick and drag on the right to look.</p></div>
+        <div class="guide-section"><h3>ABOUT THIS SCAN</h3><p>This is a reconstructed 3D capture, not a navigable architectural floor plan. Small gaps and incomplete surfaces are normal. Walk mode is free-roam and does not simulate wall collisions.</p></div>
+        <button id="doneHelp" class="guide-done">CONTINUE EXPLORING <span>↗</span></button>
+      </div>
+    </section>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <section id="loading" class="loading-screen" aria-live="polite">
+      <div class="loading-content">
+        <div class="loader-emblem" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div class="loading-overline">PREPARING THE ENVIRONMENT</div>
+        <h2>Entering<br /><em>the space.</em></h2>
+        <div class="progress-track"><div id="progressBar" class="progress-fill"></div></div>
+        <div class="loading-meta"><span id="loadMessage">INITIALIZING 3D VIEWER</span><span id="loadPercent">0%</span></div>
+        <div id="loadError" class="load-error" hidden></div>
+      </div>
+      <div class="loading-foot">3D SCAN <span>✳</span> REAL-TIME VIEWER</div>
+    </section>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
